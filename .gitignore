@@ -1,0 +1,36 @@
+*.egg-info
+.pytest_cache
+__pycache__
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build output
+dist/
+site/
+*.egg-info/
+build/
+
+# Testing
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

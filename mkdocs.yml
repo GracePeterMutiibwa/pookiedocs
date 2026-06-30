@@ -1,0 +1,23 @@
+site_name: pookiedocs
+site_description: A minimal Python documentation site generator
+docs_dir: docs
+theme:
+  name: material
+  palette:
+    scheme: default
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Project Structure: project-structure.md
+  - Configuration: configuration.md
+  - File and Folder Routing: routing.md
+  - Markdown Pages: markdown-pages.md
+  - HTML Pages: html-pages.md
+  - Static Assets: static-assets.md
+  - Navigation: navigation.md
+  - Default Theme: theme.md
+  - Search: search.md
+  - Dev Server: dev-server.md
+  - Building: building.md
+  - CLI Reference: cli.md
+  - Deployment: deployment.md

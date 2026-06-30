@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+# Author: Grace Peter Mutiibwa
+
+[project]
+name = "pookiedocs"
+version = "0.1.0"
+description = "A minimal Python documentation site generator. Markdown and HTML to static site with live reload."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Grace Peter Mutiibwa" }]
+requires-python = ">=3.10"
+keywords = ["documentation", "static site", "markdown", "generator", "docs"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Documentation",
+]
+dependencies = [
+    "mistune>=3.0",
+    "Jinja2>=3.1",
+    "click>=8.1",
+    "watchdog>=4.0",
+    "livereload>=2.7",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov",
+    "black",
+    "ruff",
+]
+
+[project.scripts]
+pookiedocs = "pookiedocs.cli.main:cli"
+
+[project.urls]
+Homepage      = "https://github.com/GracePeterMutiibwa/pookiedocs"
+Repository    = "https://github.com/GracePeterMutiibwa/pookiedocs"
+Documentation = "https://pookiedocs.readthedocs.io"
+
+[tool.setuptools.packages.find]
+where   = ["."]
+include = ["pookiedocs*"]
+
+[tool.setuptools.package-data]
+pookiedocs = ["theme/templates/*.html", "theme/assets/*"]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

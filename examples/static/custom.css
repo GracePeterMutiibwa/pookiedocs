@@ -1,0 +1,10 @@
+/* Example custom stylesheet loaded from staticDir */
+.pookiedocs-brand-name::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: url(/static/images/logo.svg) no-repeat center / contain;
+  margin-right: 6px;
+  vertical-align: middle;
+}

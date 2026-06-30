@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ pageTitle }} - {{ siteName }}</title>
+  {% if pageDescription is defined and pageDescription %}
+  <meta name="description" content="{{ pageDescription }}">
+  {% endif %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ baseUrl.rstrip('/') }}/assets/pookiedocs.css">
+  <style>:root { --pd-font: {{ fontFamilyCss | safe }}; }</style>
+</head>
+<body>
+
+  <div class="pookiedocs-topbar">
+    <button id="pookiedocs-menu-toggle" aria-label="Toggle navigation">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="pookiedocs-topbar-title">{{ siteName }}</span>
+  </div>
+
+  <div class="pookiedocs-layout">
+
+    <aside class="pookiedocs-sidebar" id="pookiedocs-sidebar">
+
+      <div class="pookiedocs-sidebar-header">
+        {% if logoUrl %}
+        <a class="pookiedocs-brand" href="{{ baseUrl }}">
+          <img class="pookiedocs-logo" src="{{ logoUrl }}" alt="{{ siteName }} logo">
+          <span class="pookiedocs-brand-name">{{ siteName }}</span>
+        </a>
+        {% else %}
+        <a class="pookiedocs-brand" href="{{ baseUrl }}">
+          <span class="pookiedocs-brand-name">{{ siteName }}</span>
+        </a>
+        {% endif %}
+
+        {% if searchEnabled %}
+        <button class="pookiedocs-search-trigger" id="pookiedocs-search-trigger" aria-label="Open search">
+          <svg viewBox="0 0 18 18" fill="none">
+            <circle cx="7.5" cy="7.5" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M11.5 11.5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span>Search...</span>
+          <kbd>Ctrl K</kbd>
+        </button>
+        {% endif %}
+      </div>
+
+      <nav class="pookiedocs-nav" aria-label="Documentation navigation">
+        {% macro renderNodes(nodes, depth) %}
+          {% for node in nodes %}
+            {% if node.urlPath is none %}
+              <details class="pookiedocs-nav-section" open>
+                <summary class="pookiedocs-nav-section-title">{{ node.title }}</summary>
+                <div class="pookiedocs-nav-section-body">
+                  {{ renderNodes(node.children, depth + 1) }}
+                </div>
+              </details>
+            {% else %}
+              <a
+                href="{{ node.urlPath }}"
+                class="pookiedocs-nav-link{% if node.isActive %} pookiedocs-nav-active{% endif %}{% if depth > 0 %} pookiedocs-nav-child{% endif %}"
+              >{{ node.title }}</a>
+            {% endif %}
+          {% endfor %}
+        {% endmacro %}
+        {{ renderNodes(navNodes, 0) }}
+      </nav>
+
+    </aside>
+
+    <main class="pookiedocs-content" id="pookiedocs-content">
+      <div class="pookiedocs-content-inner">
+        {% if breadcrumbs %}
+        <nav class="pookiedocs-breadcrumbs" aria-label="Breadcrumb">
+          {% for crumb in breadcrumbs %}
+            {% if not loop.last %}
+              {% if crumb.url %}
+                <a href="{{ crumb.url }}" class="pookiedocs-breadcrumb-link">{{ crumb.title }}</a>
+              {% else %}
+                <span class="pookiedocs-breadcrumb-text">{{ crumb.title }}</span>
+              {% endif %}
+              <span class="pookiedocs-breadcrumb-sep" aria-hidden="true">›</span>
+            {% else %}
+              <span class="pookiedocs-breadcrumb-current">{{ crumb.title }}</span>
+            {% endif %}
+          {% endfor %}
+        </nav>
+        {% endif %}
+        {{ pageContent | safe }}
+      </div>
+    </main>
+
+  </div>
+
+  {% if searchEnabled %}
+  <div class="pookiedocs-modal-overlay" id="pookiedocs-modal-overlay" hidden></div>
+  <div class="pookiedocs-modal" id="pookiedocs-modal" role="dialog" aria-modal="true" aria-label="Search" hidden>
+    <div class="pookiedocs-modal-inner">
+      <div class="pookiedocs-modal-search-row">
+        <svg class="pookiedocs-modal-search-icon" viewBox="0 0 20 20" fill="none">
+          <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <input
+          id="pookiedocs-modal-input"
+          type="search"
+          placeholder="Search documentation..."
+          autocomplete="off"
+          spellcheck="false"
+        >
+        <button class="pookiedocs-modal-close" id="pookiedocs-modal-close" aria-label="Close search">
+          <kbd>Esc</kbd>
+        </button>
+      </div>
+      <div id="pookiedocs-modal-results" class="pookiedocs-modal-results"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <script src="{{ baseUrl.rstrip('/') }}/assets/pookiedocs.js"></script>
+</body>
+</html>
