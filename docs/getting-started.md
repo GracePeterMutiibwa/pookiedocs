@@ -29,7 +29,7 @@ You will be prompted for a project name:
 Project name: My Project
 Created docs/index.md
 Created pookiedocs.config.py
-Run: pookiedocs serve
+Run: pookiedocs dev
 ```
 
 This creates two files:
@@ -40,7 +40,7 @@ This creates two files:
 ## Start the dev server
 
 ```bash
-pookiedocs serve
+pookiedocs dev
 ```
 
 ```
@@ -51,7 +51,15 @@ Live reload: on
 
 Open `http://localhost:3000` in your browser. Edit `docs/index.md` and the browser reloads automatically.
 
-## Build for production
+## Serve in production
+
+```bash
+pookiedocs serve
+```
+
+Builds the site and serves it on `0.0.0.0:3000`. Use this command in Docker, on a VPS, or on any platform that runs a persistent process. See the [Deployment](deployment.md) guide for examples.
+
+## Build for static hosting
 
 ```bash
 pookiedocs build

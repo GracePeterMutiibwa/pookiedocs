@@ -18,7 +18,7 @@ pookiedocs build
 5. Generates the navigation tree
 6. Generates `search-index.json`
 7. Copies `staticDir` contents to `outputDir/static/`
-8. Copies theme assets to `dist/assets/`
+8. Copies theme assets to `outputDir/assets/`
 9. Writes all output to `outputDir`
 
 ## Output
@@ -39,10 +39,24 @@ Override the output directory without changing your config:
 pookiedocs build --output myfolder
 ```
 
-## Deployment
+Use an alternate config file:
 
-The build output is a fully self-contained static site. Copy the `outputDir` folder to any static file host. See the [Deployment](deployment.md) guide for step-by-step instructions for Cloudflare Pages, Netlify, GitHub Pages, Docker, and a VPS with nginx.
+```bash
+pookiedocs build --config path/to/pookiedocs.config.py
+```
 
 ## Stale files
 
 If `outputDir` already exists, pookiedocs clears it completely before writing. No stale files from previous builds are left behind.
+
+## Serving the output
+
+There are three ways to serve the built site depending on your use case:
+
+| Use case | Command |
+|---|---|
+| Local development with live reload | `pookiedocs dev` |
+| Production server (Docker, VPS, containers) | `pookiedocs serve` |
+| Static file host (Cloudflare, Netlify, GitHub Pages) | `pookiedocs build` then deploy `dist/` |
+
+See the [Deployment](deployment.md) guide for step-by-step instructions.

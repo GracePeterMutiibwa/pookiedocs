@@ -1,10 +1,11 @@
 import json
 import re
 from pathlib import Path
+from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 from livereload import Server
 
-from pookiedocs.builder import _deepCopyNavNodes
+from pookiedocs.builder import _deepCopyNavNodes, buildSite
 from pookiedocs.config import loadConfig
 from pookiedocs.converter import convertMarkdown, convertHtml
 from pookiedocs.scanner import scanDocs, buildNavTree, markActiveNode
@@ -13,8 +14,98 @@ from pookiedocs.theme import renderPage
 _htmlTagPattern = re.compile(r"<[^>]+>")
 _whitespacePattern = re.compile(r"\s+")
 
+_mimeTypes = {
+    ".css": "text/css",
+    ".js": "application/javascript",
+    ".html": "text/html; charset=utf-8",
+    ".png": "image/png",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".gif": "image/gif",
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon",
+    ".json": "application/json",
+    ".pdf": "application/pdf",
+    ".woff": "font/woff",
+    ".woff2": "font/woff2",
+    ".ttf": "font/ttf",
+    ".webp": "image/webp",
+}
 
-def serveDocs(host: str = "localhost", port: int = 3000, config_path: str = "pookiedocs.config.py") -> None:
+
+class _QuietHandler(WSGIRequestHandler):
+    def log_message(self, format, *args):
+        pass
+
+
+def _serveFile(file_path: Path, start_response):
+    contentType = _mimeTypes.get(file_path.suffix.lower(), "application/octet-stream")
+    try:
+        data = file_path.read_bytes()
+    except OSError:
+        body = b"<html><body><h1>404 Not Found</h1></body></html>"
+        start_response("404 Not Found", [("Content-Type", "text/html")])
+        return [body]
+    start_response("200 OK", [
+        ("Content-Type", contentType),
+        ("Content-Length", str(len(data))),
+    ])
+    return [data]
+
+
+def serveDocs(host: str = "0.0.0.0", port: int = 3000, config_path: str = "pookiedocs.config.py") -> None:
+    """Production server: build once then serve the output directory as static files."""
+    config = loadConfig(config_path)
+
+    print("Building...")
+    buildSite(config_path=config_path)
+
+    outputDir = Path(config.outputDir).resolve()
+
+    def _wsgiApp(environ, start_response):
+        requestPath = environ.get("PATH_INFO", "/")
+
+        # Resolve request path to a file inside outputDir
+        filePath = outputDir / requestPath.lstrip("/")
+
+        # Directory → index.html
+        if filePath.is_dir():
+            filePath = filePath / "index.html"
+
+        # Clean URL → try .html extension
+        if not filePath.exists() and not filePath.suffix:
+            filePath = filePath.with_suffix(".html")
+
+        # Redirect bare .html requests to the clean URL
+        if requestPath.endswith(".html") and requestPath != "/index.html":
+            cleanPath = requestPath[:-5] or "/"
+            start_response("301 Moved Permanently", [
+                ("Location", cleanPath),
+                ("Content-Length", "0"),
+            ])
+            return [b""]
+
+        if filePath.is_file():
+            return _serveFile(filePath, start_response)
+
+        body = b"<html><body><h1>404 Not Found</h1></body></html>"
+        start_response("404 Not Found", [
+            ("Content-Type", "text/html; charset=utf-8"),
+            ("Content-Length", str(len(body))),
+        ])
+        return [body]
+
+    httpd = make_server(host, port, _wsgiApp, handler_class=_QuietHandler)
+    print(f"pookiedocs")
+    print(f"http://{host}:{port}")
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+
+
+def devDocs(host: str = "localhost", port: int = 3000, config_path: str = "pookiedocs.config.py") -> None:
+    """Dev server: in-memory build with live reload on file changes."""
     config = loadConfig(config_path)
 
     pageCache: dict[str, str] = {}
@@ -85,7 +176,6 @@ def serveDocs(host: str = "localhost", port: int = 3000, config_path: str = "poo
             if staticFilePath.is_file():
                 return _serveFile(staticFilePath, start_response)
 
-        # Redirect bare .html extension requests to the clean URL
         if requestPath.endswith(".html"):
             cleanPath = requestPath[:-5] or "/"
             if cleanPath in pageCache:
@@ -110,40 +200,6 @@ def serveDocs(host: str = "localhost", port: int = 3000, config_path: str = "poo
         ])
         return [body]
 
-    def _serveFile(file_path: Path, start_response):
-        mimeTypes = {
-            ".css": "text/css",
-            ".js": "application/javascript",
-            ".html": "text/html",
-            ".png": "image/png",
-            ".jpg": "image/jpeg",
-            ".jpeg": "image/jpeg",
-            ".gif": "image/gif",
-            ".svg": "image/svg+xml",
-            ".ico": "image/x-icon",
-            ".json": "application/json",
-            ".zip": "application/zip",
-            ".pdf": "application/pdf",
-            ".woff": "font/woff",
-            ".woff2": "font/woff2",
-            ".ttf": "font/ttf",
-        }
-        contentType = mimeTypes.get(file_path.suffix.lower(), "application/octet-stream")
-        try:
-            data = file_path.read_bytes()
-        except OSError:
-            body = b"<html><body><h1>404 Not Found</h1></body></html>"
-            start_response("404 Not Found", [("Content-Type", "text/html")])
-            return [body]
-        start_response("200 OK", [
-            ("Content-Type", contentType),
-            ("Content-Length", str(len(data))),
-        ])
-        return [data]
-
-    # Server(app=_wsgiApp) passes the WSGI app through the constructor so
-    # livereload's own application() method wraps it correctly with
-    # LiveScriptContainer, which handles script injection and calling convention.
     liveServer = Server(app=_wsgiApp)
 
     def _onDocChange():

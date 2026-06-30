@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pookiedocs"
-version = "0.1.0"
+version = "0.1.1"
 description = "A minimal Python documentation site generator. Markdown and HTML to static site with live reload."
 readme = "README.md"
 license = { text = "MIT" }

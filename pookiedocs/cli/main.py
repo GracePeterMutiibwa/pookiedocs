@@ -50,18 +50,19 @@ def initProject():
 
     click.echo("Created docs/index.md")
     click.echo("Created pookiedocs.config.py")
-    click.echo("Run: pookiedocs serve")
+    click.echo("Run: pookiedocs dev")
 
 
-@cli.command("serve")
+@cli.command("dev")
 @click.option("--host", default="localhost", help="Host to bind the dev server to")
 @click.option("--port", default=3000, type=int, help="Port for the dev server")
 @click.option("--config", default="pookiedocs.config.py", help="Path to config file")
-def serveProject(host, port, config):
-    from pookiedocs.server import serveDocs
+def devProject(host, port, config):
+    """Start the live-reload dev server (for local development)."""
+    from pookiedocs.server import devDocs
 
     try:
-        serveDocs(host=host, port=port, config_path=config)
+        devDocs(host=host, port=port, config_path=config)
     except FileNotFoundError as error:
         click.echo(f"Error: {error}")
         sys.exit(1)
@@ -70,10 +71,29 @@ def serveProject(host, port, config):
         sys.exit(1)
 
 
+@cli.command("serve")
+@click.option("--host", default="0.0.0.0", help="Host to bind to")
+@click.option("--port", default=3000, type=int, help="Port to listen on")
+@click.option("--config", default="pookiedocs.config.py", help="Path to config file")
+def serveProject(host, port, config):
+    """Build and serve the docs (for production / Docker)."""
+    from pookiedocs.server import serveDocs
+
+    try:
+        serveDocs(host=host, port=port, config_path=config)
+    except FileNotFoundError as error:
+        click.echo(f"Error: {error}")
+        sys.exit(1)
+    except Exception as error:
+        click.echo(f"Error starting server: {error}")
+        sys.exit(1)
+
+
 @cli.command("build")
 @click.option("--output", default=None, help="Override the outputDir from config")
 @click.option("--config", default="pookiedocs.config.py", help="Path to config file")
 def buildProject(output, config):
+    """Build the static site to outputDir."""
     from pookiedocs.builder import buildSite
 
     try:

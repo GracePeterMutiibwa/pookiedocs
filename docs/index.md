@@ -12,7 +12,7 @@ A minimal Python documentation site generator. Reads markdown and HTML files fro
 ```bash
 pip install pookiedocs
 pookiedocs init
-pookiedocs serve
+pookiedocs dev
 ```
 
 Open `http://localhost:3000` and start writing.

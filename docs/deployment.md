@@ -1,17 +1,42 @@
 ---
 title: Deployment
-description: Deploy a pookiedocs static site to Cloudflare Pages, Netlify, GitHub Pages, Docker, and a VPS
+description: Deploy a pookiedocs site to Docker, Cloudflare Pages, Netlify, GitHub Pages, and a VPS
 ---
 
 # Deployment
 
-Run the build command to produce a self-contained static site:
+pookiedocs supports two deployment paths:
 
-```bash
-pookiedocs build
+- **Built-in server** — run `pookiedocs serve` and pookiedocs builds the site then serves it. No external web server needed. Best for Docker and container platforms.
+- **Static export** — run `pookiedocs build` and copy the `dist/` folder to any static file host.
+
+## Docker
+
+The simplest production deployment. pookiedocs builds and serves your docs in a single container with no external dependencies.
+
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY . .
+RUN pip install --no-cache-dir pookiedocs
+EXPOSE 3000
+CMD ["pookiedocs", "serve", "--port", "3000"]
 ```
 
-Everything needed to serve the site - HTML pages, the search index, CSS, and JavaScript - is written to `outputDir` (default `dist/`). Copy that folder to any static file host.
+Build and run:
+
+```bash
+docker build -t my-docs .
+docker run -p 3000:3000 my-docs
+```
+
+The site is available at `http://localhost:3000`. Deploy the image to GCP Cloud Run, AWS App Runner, Fly.io, Railway, or any platform that runs containers.
+
+To use a different port:
+
+```bash
+docker run -p 8080:8080 my-docs pookiedocs serve --port 8080
+```
 
 ## Cloudflare Pages
 
@@ -19,14 +44,14 @@ Everything needed to serve the site - HTML pages, the search index, CSS, and Jav
 2. In the Cloudflare dashboard go to **Workers & Pages > Create > Pages > Connect to Git**.
 3. Select your repository and set the following build settings:
 
-| Setting                | Value                                        |
-| ---------------------- | -------------------------------------------- |
-| Build command          | `pip install pookiedocs && pookiedocs build` |
-| Build output directory | `dist`                                       |
+| Setting | Value |
+|---|---|
+| Build command | `pip install pookiedocs && pookiedocs build` |
+| Build output directory | `dist` |
 
 4. Click **Save and Deploy**. Every push to your default branch triggers a new deployment.
 
-If you pin a specific version, install it in the build command:
+To pin a specific version:
 
 ```bash
 pip install pookiedocs==0.1.0 && pookiedocs build
@@ -47,7 +72,7 @@ Create a `netlify.toml` at the root of your repository:
 
 Push the file and connect the repository in the Netlify dashboard. Netlify picks up `netlify.toml` automatically on every push.
 
-Alternatively, use the Netlify CLI to deploy a local build manually:
+To deploy a local build manually:
 
 ```bash
 pookiedocs build
@@ -138,29 +163,3 @@ For HTTPS, use Certbot:
 ```bash
 sudo certbot --nginx -d docs.example.com
 ```
-
-## Docker
-
-Add a `Dockerfile` at the root of your project:
-
-```dockerfile
-FROM python:3.12-slim AS builder
-WORKDIR /app
-COPY . .
-RUN pip install --no-cache-dir pookiedocs && pookiedocs build
-
-FROM nginx:alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-EXPOSE 80
-```
-
-Build and run:
-
-```bash
-docker build -t my-docs .
-docker run -p 8080:80 my-docs
-```
-
-The site is available at `http://localhost:8080`. The final image contains only nginx and the built HTML - no Python in production.
-
-This image works anywhere that runs containers: GCP Cloud Run, AWS App Runner, Fly.io, Railway, a plain VPS with Docker installed, or any other container platform.
